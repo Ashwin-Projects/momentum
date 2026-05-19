@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { Button } from "../ui/button";
-import { Menu, X, LogOut, ChevronDown, User, Bell } from "lucide-react";
+import { Menu, X, LogOut, User, Bell } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const mobileNavItems = [
@@ -73,13 +73,12 @@ export default function Navbar() {
           <button
             type="button"
             onClick={handleProfileMenuToggle}
-            className="hidden items-center gap-2 rounded-lg border border-white/[0.04] bg-[#141414] px-3 py-1.5 text-left transition-colors hover:bg-[#1a1a1a] sm:flex"
+            className="hidden items-center justify-center rounded-full border border-white/[0.04] bg-[#141414] p-1.5 text-left transition-colors hover:bg-[#1a1a1a] sm:flex"
+            aria-label="Account menu"
           >
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#1f1f1f] text-sm font-medium text-zinc-200">
               {user.name?.charAt(0).toUpperCase() || "U"}
             </div>
-            <span className="text-sm font-medium text-zinc-300">{user.name}</span>
-            <ChevronDown className="h-3.5 w-3.5 text-zinc-500" />
           </button>
         )}
         {isProfileMenuOpen && user && (
