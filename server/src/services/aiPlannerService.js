@@ -3,7 +3,7 @@ const DEFAULT_MODEL = 'llama-3.1-8b-instant';
 
 const getApiKey = () => process.env.GROQ_API_KEY || '';
 
-const getModelName = () => process.env.GROQ_MODEL || DEFAULT_MODEL;
+const getModelName = () => DEFAULT_MODEL;
 
 const MOMENTUM_SYSTEM_PROMPT = `You are Momentum's AI productivity coach. You help users optimize daily performance across study, fitness, nutrition, and sleep.
 
@@ -167,7 +167,7 @@ RECENT SLEEP (DailyTarget):
 ${sleepLines || '(none logged)'}`;
 };
 
-const mapChatHistory = (conversationHistory = []) => {
+const mapGeminiHistory = (conversationHistory = []) => {
   const history = [];
 
   conversationHistory.forEach((msg) => {
@@ -217,17 +217,17 @@ const generatePlan = async (userContext, userMessage, conversationHistory = []) 
   }
 
   const systemInstruction = `${MOMENTUM_SYSTEM_PROMPT}\n\nCURRENT USER DATA:\n${formatUserContext(userContext)}`;
-  const history = mapChatHistory(conversationHistory);
+  const history = mapGeminiHistory(conversationHistory);
 
   try {
-    const response = await fetch(GROQ_ENDPOINT, {
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${apiKey}`,
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
       },
       body: JSON.stringify({
-        model: getModelName(),
+        model: "llama-3.1-8b-instant",
         messages: [
           { role: 'system', content: systemInstruction },
           ...history,
@@ -236,16 +236,13 @@ const generatePlan = async (userContext, userMessage, conversationHistory = []) 
       }),
     });
 
-    const payload = await response.json();
+    const data = await response.json();
     if (!response.ok) {
-      const errorMessage = payload?.error?.message || payload?.message || `HTTP ${response.status}`;
+      const errorMessage = data?.error?.message || data?.message || `HTTP ${response.status}`;
       throw new Error(`Groq request failed: ${errorMessage}`);
     }
 
-    const content = payload?.choices?.[0]?.message?.content;
-    const rawText = Array.isArray(content)
-      ? content.map((item) => item?.text || '').join('\n').trim()
-      : String(content || '').trim();
+    const rawText = data?.choices?.[0]?.message?.content || '';
     if (!rawText) {
       throw new Error('Groq response did not include message content');
     }
