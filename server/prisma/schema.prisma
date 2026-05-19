@@ -1,0 +1,234 @@
+// Prisma Schema for Momentum Project
+// PostgreSQL + Prisma ORM
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// ============================================
+// USER
+// ============================================
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  dailyTargets    DailyTarget[]
+  studySessions  StudySession[]
+  workoutLogs    WorkoutLog[]
+  nutritionLogs  NutritionLog[]
+  focusSessions  FocusSession[]
+  moodLogs       MoodLog[]
+  screenTimeLogs ScreenTimeLog[]
+  notifications  Notification[]
+}
+
+// ============================================
+// DAILY TARGET
+// ============================================
+
+model DailyTarget {
+  id              String   @id @default(cuid())
+  userId          String
+  date            DateTime // YYYY-MM-DD start of day
+  studyMinutesGoal Int     @default(0)
+  workoutGoal     Int     @default(0)
+  caloriesGoal    Int     @default(0)
+  sleepHoursGoal  Float    @default(0.0)
+
+  studyMinutesActual  Int     @default(0)
+  workoutsCompleted   Int     @default(0)
+  caloriesActual      Int     @default(0)
+  sleepHoursActual    Float   @default(0.0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  studySessions  StudySession[]
+  workoutLogs    WorkoutLog[]
+  nutritionLogs  NutritionLog[]
+  focusSessions  FocusSession[]
+  moodLogs       MoodLog[]
+  screenTimeLogs ScreenTimeLog[]
+
+  // Indexes
+  @@unique([userId, date])
+  @@index([userId])
+}
+
+// ============================================
+// STUDY SESSION
+// ============================================
+
+model StudySession {
+  id            String   @id @default(cuid())
+  userId        String
+  dailyTargetId String?
+  subject       String
+  durationMinutes Int
+  notes         String?
+  startedAt     DateTime
+  createdAt     DateTime @default(now())
+
+  // Relations
+  user          User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyTarget   DailyTarget? @relation(fields: [dailyTargetId], references: [id], onDelete: SetNull)
+
+  // Indexes
+  @@index([userId, startedAt])
+  @@index([userId])
+}
+
+// ============================================
+// WORKOUT LOG
+// ============================================
+
+model WorkoutLog {
+  id              String   @id @default(cuid())
+  userId          String
+  dailyTargetId   String?
+  type            String   // strength, cardio, yoga, etc.
+  durationMinutes Int
+  caloriesBurned  Int?
+  notes           String?
+  completedAt     DateTime
+  createdAt       DateTime @default(now())
+
+  // Relations
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyTarget     DailyTarget? @relation(fields: [dailyTargetId], references: [id], onDelete: SetNull)
+
+  // Indexes
+  @@index([userId, completedAt])
+  @@index([userId])
+}
+
+// ============================================
+// NUTRITION LOG
+// ============================================
+
+model NutritionLog {
+  id          String   @id @default(cuid())
+  userId      String
+  dailyTargetId String?
+  mealType    String   // breakfast, lunch, dinner, snack
+  foodName    String
+  calories    Int
+  proteinGrams Int?
+  carbsGrams  Int?
+  fatGrams    Int?
+  loggedAt    DateTime
+  createdAt   DateTime @default(now())
+
+  // Relations
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyTarget DailyTarget? @relation(fields: [dailyTargetId], references: [id], onDelete: SetNull)
+
+  // Indexes
+  @@index([userId, loggedAt])
+  @@index([userId])
+}
+
+// ============================================
+// FOCUS SESSION
+// ============================================
+
+model FocusSession {
+  id                String   @id @default(cuid())
+  userId            String
+  dailyTargetId     String?
+  taskName          String
+  durationMinutes   Int
+  focusScore        Int      // 1-10 self-rated focus quality
+  distractionsCount Int      @default(0)
+  startedAt         DateTime
+  notes             String?
+  createdAt         DateTime @default(now())
+
+  // Relations
+  user              User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyTarget       DailyTarget? @relation(fields: [dailyTargetId], references: [id], onDelete: SetNull)
+
+  // Indexes
+  @@index([userId, startedAt])
+  @@index([userId])
+}
+
+// ============================================
+// MOOD LOG
+// ============================================
+
+model MoodLog {
+  id          String   @id @default(cuid())
+  userId      String
+  dailyTargetId String?
+  mood        String   // great, good, neutral, low, bad
+  energyLevel Int      // 1-10 scale
+  stressLevel Int      // 1-10 scale
+  notes       String?
+  loggedAt    DateTime
+  createdAt   DateTime @default(now())
+
+  // Relations
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyTarget DailyTarget? @relation(fields: [dailyTargetId], references: [id], onDelete: SetNull)
+
+  // Indexes
+  @@index([userId, loggedAt])
+  @@index([userId])
+}
+
+// ============================================
+// SCREEN TIME LOG
+// ============================================
+
+model ScreenTimeLog {
+  id              String   @id @default(cuid())
+  userId          String
+  dailyTargetId   String?
+  appName         String
+  durationMinutes Int
+  category        String   // productive, distracting, neutral
+  loggedAt        DateTime
+  createdAt       DateTime @default(now())
+
+  // Relations
+  user            User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dailyTarget     DailyTarget? @relation(fields: [dailyTargetId], references: [id], onDelete: SetNull)
+
+  // Indexes
+  @@index([userId, loggedAt])
+  @@index([userId])
+}
+
+// ============================================
+// NOTIFICATION
+// ============================================
+
+model Notification {
+  id        String   @id @default(cuid())
+  userId    String
+  title     String
+  message   String
+  type      String   // reminder, alert, info
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  // Relations
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Indexes
+  @@index([userId])
+  @@index([userId, isRead])
+}
